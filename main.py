@@ -6,6 +6,7 @@ from fastapi import Depends, FastAPI, HTTPException, Request, status
 from fastapi.middleware.cors import CORSMiddleware
 
 import schemas
+from cookie import suno_auth
 from deps import get_token
 from utils import generate_lyrics, generate_music, get_feed, get_lyrics
 
@@ -79,6 +80,25 @@ async def generate_lyrics_post(request: Request, token: str = Depends(get_token)
         raise HTTPException(
             detail=str(e), status_code=status.HTTP_500_INTERNAL_SERVER_ERROR
         )
+
+
+@app.post('/api/cookie')
+async def set_cookie(request: Request):
+    req = await request.json()
+    cookie = req.get('cookie')
+    session_id = req.get('session_id')
+    suno_auth.load_cookie(cookie)
+    suno_auth.set_session_id(session_id)
+    return {'status': 'success'}
+
+
+@app.get('/api/cookie')
+async def get_cookie(request: Request):
+    return {
+        'status': 'success',
+        'cookie': suno_auth.get_cookie(),
+        'session_id': suno_auth.get_session_id(),
+    }
 
 
 @app.get("/lyrics/{lid}")
